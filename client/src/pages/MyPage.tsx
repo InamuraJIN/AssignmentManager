@@ -69,9 +69,6 @@ export default function MyPage() {
             <span className="font-semibold text-foreground tracking-wide">Student Portal</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/students">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">受講生一覧</Button>
-            </Link>
             <Button
               variant="outline"
               size="sm"
@@ -102,11 +99,10 @@ export default function MyPage() {
           <div className="bg-white/90 px-8 pb-8">
             <div className="flex items-end gap-4 -mt-8 mb-6">
               <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold" style={{ background: "linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.45 0.14 255))" }}>
-                {me.username.charAt(0).toUpperCase()}
+                {me.loginId.charAt(0).toUpperCase()}
               </div>
               <div className="pb-1">
-                <h2 className="text-2xl font-bold text-foreground">{me.username}</h2>
-                <p className="text-sm text-muted-foreground">ID: {me.loginId}</p>
+                <h2 className="text-2xl font-bold text-foreground">{me.loginId}</h2>
               </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full w-fit text-xs font-medium" style={{ background: "oklch(0.93 0.04 255 / 0.5)", color: "oklch(0.32 0.08 255)" }}>

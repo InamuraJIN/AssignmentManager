@@ -1,12 +1,10 @@
 import { google } from "googleapis";
+import { GoogleAuth } from "google-auth-library";
 
-// スプレッドシートIDは環境変数から取得（外部から差し替え可能）
 function getSpreadsheetId(): string {
   const url = process.env.GOOGLE_SPREADSHEET_URL || "";
-  // URL形式: https://docs.google.com/spreadsheets/d/{ID}/edit...
   const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
   if (match) return match[1];
-  // IDが直接指定されている場合
   return process.env.GOOGLE_SPREADSHEET_ID || "";
 }
 
@@ -14,13 +12,13 @@ function getSheetName(): string {
   return process.env.GOOGLE_SHEET_NAME || "Sheet1";
 }
 
-async function getAuthClient() {
+async function getAuthClient(): Promise<GoogleAuth> {
   const credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!credentialsJson) {
     throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not set");
   }
   const credentials = JSON.parse(credentialsJson);
-  const auth = new google.auth.GoogleAuth({
+  const auth = new GoogleAuth({
     credentials,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
@@ -28,28 +26,28 @@ async function getAuthClient() {
 }
 
 /**
- * スプレッドシートにユーザー名を新しい行として追記する
+ * スプレッドシートにログインIDを新しい行として追記する
  * 戻り値: 追記された行番号（1始まり）
  */
-export async function appendUsernameToSheet(username: string): Promise<number> {
+export async function appendUsernameToSheet(loginId: string): Promise<number> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) throw new Error("Spreadsheet ID is not configured");
 
   const auth = await getAuthClient();
-  const sheets = google.sheets({ version: "v4", auth });
+  const authClient = await auth.getClient();
+  const sheetsClient = google.sheets({ version: "v4", auth: authClient as Parameters<typeof google.sheets>[0]["auth"] });
   const sheetName = getSheetName();
 
-  const response = await sheets.spreadsheets.values.append({
+  const response = await sheetsClient.spreadsheets.values.append({
     spreadsheetId,
     range: `${sheetName}!A:A`,
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
     requestBody: {
-      values: [[username]],
+      values: [[loginId]],
     },
   });
 
-  // 追記された範囲から行番号を取得
   const updatedRange = response.data.updates?.updatedRange || "";
   const rowMatch = updatedRange.match(/(\d+)$/);
   const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : 0;
@@ -58,7 +56,7 @@ export async function appendUsernameToSheet(username: string): Promise<number> {
 
 /**
  * スプレッドシートから全データを取得する
- * 想定フォーマット: A列=ユーザー名, B列以降=採点結果
+ * 想定フォーマット: A列=ログインID, B列以降=採点結果
  */
 export async function fetchSheetData(): Promise<{ username: string; scores: string[] }[]> {
   const spreadsheetId = getSpreadsheetId();
@@ -66,20 +64,21 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
 
   try {
     const auth = await getAuthClient();
-    const sheets = google.sheets({ version: "v4", auth });
+    const authClient = await auth.getClient();
+    const sheetsClient = google.sheets({ version: "v4", auth: authClient as Parameters<typeof google.sheets>[0]["auth"] });
     const sheetName = getSheetName();
 
-    const response = await sheets.spreadsheets.values.get({
+    const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId,
       range: `${sheetName}!A:Z`,
     });
 
-    const rows = response.data.values || [];
+    const rows: string[][] = (response.data.values || []) as string[][];
     return rows
-      .filter((row) => row[0] && String(row[0]).trim() !== "")
-      .map((row) => ({
+      .filter((row: string[]) => row[0] && String(row[0]).trim() !== "")
+      .map((row: string[]) => ({
         username: String(row[0]).trim(),
-        scores: row.slice(1).map((v) => String(v ?? "")),
+        scores: row.slice(1).map((v: string) => String(v ?? "")),
       }));
   } catch (error) {
     console.error("[Sheets] Failed to fetch data:", error);
@@ -88,10 +87,10 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
 }
 
 /**
- * 特定ユーザー名の採点結果をスプレッドシートから取得する
+ * 特定ログインIDの採点結果をスプレッドシートから取得する
  */
-export async function fetchScoreByUsername(username: string): Promise<string[] | null> {
+export async function fetchScoreByUsername(loginId: string): Promise<string[] | null> {
   const data = await fetchSheetData();
-  const found = data.find((row) => row.username === username);
+  const found = data.find((row) => row.username === loginId);
   return found ? found.scores : null;
 }

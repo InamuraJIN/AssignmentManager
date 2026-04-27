@@ -28,7 +28,7 @@ export default function Login() {
   const utils = trpc.useUtils();
   const mutation = trpc.student.login.useMutation({
     onSuccess: (data) => {
-      toast.success(`「${data.username}」としてログインしました`);
+      toast.success(`「${data.loginId}」としてログインしました`);
       utils.student.me.invalidate();
       navigate("/mypage");
     },
@@ -90,10 +90,10 @@ export default function Login() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="loginId" className="text-sm font-medium">ログインID <span className="text-destructive">*</span></Label>
+                <Label htmlFor="loginId" className="text-sm font-medium">ID <span className="text-destructive">*</span></Label>
                 <Input
                   id="loginId"
-                  placeholder="登録したログインID"
+                  placeholder="例：YamadaTaro"
                   {...register("loginId")}
                   className="h-11 bg-white border-input focus:border-primary"
                 />

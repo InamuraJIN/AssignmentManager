@@ -96,7 +96,7 @@ export default function StudentList() {
                 <thead>
                   <tr className="border-b border-border/50" style={{ background: "oklch(0.97 0.008 255)" }}>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">#</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">ユーザー名</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">ID</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">採点結果</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">登録日</th>
                   </tr>
@@ -110,9 +110,9 @@ export default function StudentList() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: `hsl(${(index * 47) % 360}, 55%, 45%)` }}>
-                            {student.username.charAt(0).toUpperCase()}
+                            {student.loginId.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-medium text-foreground">{student.username}</span>
+                          <span className="font-medium text-foreground">{student.loginId}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -143,9 +143,9 @@ export default function StudentList() {
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center justify-center w-6">{getRankIcon(index)}</div>
                     <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: `hsl(${(index * 47) % 360}, 55%, 45%)` }}>
-                      {student.username.charAt(0).toUpperCase()}
+                      {student.loginId.charAt(0).toUpperCase()}
                     </div>
-                    <span className="font-semibold text-foreground">{student.username}</span>
+                    <span className="font-semibold text-foreground">{student.loginId}</span>
                   </div>
                   <div className="ml-12 space-y-1">
                     {student.scores && student.scores.length > 0 ? (

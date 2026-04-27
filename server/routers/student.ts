@@ -6,7 +6,6 @@ import {
   createStudent,
   getAllStudents,
   getStudentByLoginId,
-  getStudentByUsername,
   getStudentById,
   updateStudentSheetRow,
 } from "../db";
@@ -30,48 +29,39 @@ function verifyStudentToken(token: string): { studentId: number } | null {
 const STUDENT_COOKIE = "student_session";
 
 export const studentRouter = router({
-  // 生徒登録
+  // 生徒登録（loginIdのみ）
   register: publicProcedure
     .input(
       z.object({
-        username: z.string().min(1).max(100),
-        loginId: z.string().min(3).max(100),
+        loginId: z.string().min(3, "IDは3文字以上で入力してください").max(100),
         password: z.string().min(6).max(100),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // 重複チェック
-      const existingUsername = await getStudentByUsername(input.username);
-      if (existingUsername) {
-        throw new TRPCError({ code: "CONFLICT", message: "このユーザー名はすでに使用されています" });
-      }
-      const existingLoginId = await getStudentByLoginId(input.loginId);
-      if (existingLoginId) {
-        throw new TRPCError({ code: "CONFLICT", message: "このログインIDはすでに使用されています" });
+      const existing = await getStudentByLoginId(input.loginId);
+      if (existing) {
+        throw new TRPCError({ code: "CONFLICT", message: "このIDはすでに使用されています" });
       }
 
       const passwordHash = await bcrypt.hash(input.password, 12);
       await createStudent({
-        username: input.username,
         loginId: input.loginId,
         passwordHash,
       });
 
-      // 登録後に再取得してIDを得る
       const student = await getStudentByLoginId(input.loginId);
       if (!student) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      // スプレッドシートにユーザー名を追記（エラーでも登録は成功扱い）
+      // スプレッドシートにloginIdを追記（エラーでも登録は成功扱い）
       try {
-        const rowNumber = await appendUsernameToSheet(input.username);
+        const rowNumber = await appendUsernameToSheet(input.loginId);
         if (rowNumber > 0) {
           await updateStudentSheetRow(student.id, rowNumber);
         }
       } catch (e) {
-        console.error("[Sheets] Failed to append username:", e);
+        console.error("[Sheets] Failed to append loginId:", e);
       }
 
-      // セッションクッキーを発行
       const token = signStudentToken(student.id);
       ctx.res.cookie(STUDENT_COOKIE, token, {
         httpOnly: true,
@@ -81,7 +71,7 @@ export const studentRouter = router({
         path: "/",
       });
 
-      return { success: true, username: student.username };
+      return { success: true, loginId: student.loginId };
     }),
 
   // ログイン
@@ -112,7 +102,7 @@ export const studentRouter = router({
         path: "/",
       });
 
-      return { success: true, username: student.username };
+      return { success: true, loginId: student.loginId };
     }),
 
   // ログアウト
@@ -134,19 +124,19 @@ export const studentRouter = router({
     if (!payload) return null;
     const student = await getStudentById(payload.studentId);
     if (!student) return null;
-    return { id: student.id, username: student.username, loginId: student.loginId };
+    return { id: student.id, loginId: student.loginId };
   }),
 
-  // 全ユーザー名一覧（採点結果付き）
+  // 全ID一覧（採点結果付き）
   list: publicProcedure.query(async () => {
-    const students = await getAllStudents();
+    const allStudents = await getAllStudents();
     const sheetData = await fetchSheetData().catch(() => []);
 
-    return students.map((s) => {
-      const sheetRow = sheetData.find((r) => r.username === s.username);
+    return allStudents.map((s) => {
+      const sheetRow = sheetData.find((r) => r.username === s.loginId);
       return {
         id: s.id,
-        username: s.username,
+        loginId: s.loginId,
         scores: sheetRow?.scores ?? [],
         createdAt: s.createdAt,
       };
@@ -162,9 +152,9 @@ export const studentRouter = router({
     const student = await getStudentById(payload.studentId);
     if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const scores = await fetchScoreByUsername(student.username).catch(() => null);
+    const scores = await fetchScoreByUsername(student.loginId).catch(() => null);
     return {
-      username: student.username,
+      loginId: student.loginId,
       scores: scores ?? [],
     };
   }),

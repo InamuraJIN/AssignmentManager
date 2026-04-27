@@ -11,8 +11,7 @@ import { toast } from "sonner";
 import { BookOpen, Eye, EyeOff, UserPlus, ArrowLeft } from "lucide-react";
 
 const schema = z.object({
-  username: z.string().min(1, "ユーザー名を入力してください").max(100),
-  loginId: z.string().min(3, "ログインIDは3文字以上で入力してください").max(100),
+  loginId: z.string().min(3, "IDは3文字以上で入力してください").max(100),
   password: z.string().min(6, "パスワードは6文字以上で入力してください").max(100),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
@@ -33,7 +32,7 @@ export default function Register() {
 
   const mutation = trpc.student.register.useMutation({
     onSuccess: (data) => {
-      toast.success(`「${data.username}」として登録しました！`);
+      toast.success(`「${data.loginId}」として登録しました！`);
       navigate("/mypage");
     },
     onError: (err) => {
@@ -42,7 +41,7 @@ export default function Register() {
   });
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate({ username: data.username, loginId: data.loginId, password: data.password });
+    mutation.mutate({ loginId: data.loginId, password: data.password });
   };
 
   return (
@@ -57,10 +56,10 @@ export default function Register() {
         </div>
         <div>
           <h2 className="text-4xl font-bold text-white leading-tight mb-4">
-            学びの第一歩を<br />ここから始めよう
+            アカウントを<br />作成しよう
           </h2>
           <p className="text-white/70 text-lg leading-relaxed">
-            登録するだけで、採点結果の確認や受講生一覧へのアクセスが可能になります。
+            IDとパスワードを登録するだけで、採点結果の確認ができるようになります。
           </p>
         </div>
         <div className="flex gap-4">
@@ -95,21 +94,10 @@ export default function Register() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="username" className="text-sm font-medium">ユーザー名 <span className="text-destructive">*</span></Label>
-                <Input
-                  id="username"
-                  placeholder="例：山田太郎"
-                  {...register("username")}
-                  className="h-11 bg-white border-input focus:border-primary"
-                />
-                {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="loginId" className="text-sm font-medium">ログインID <span className="text-destructive">*</span></Label>
+                <Label htmlFor="loginId" className="text-sm font-medium">ID <span className="text-destructive">*</span></Label>
                 <Input
                   id="loginId"
-                  placeholder="例：yamada2024"
+                  placeholder="例：YamadaTaro"
                   {...register("loginId")}
                   className="h-11 bg-white border-input focus:border-primary"
                 />

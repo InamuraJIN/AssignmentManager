@@ -4,7 +4,6 @@ import type { TrpcContext } from "./_core/context";
 
 // DB・Sheetsをモック
 vi.mock("./db", () => ({
-  getStudentByUsername: vi.fn(),
   getStudentByLoginId: vi.fn(),
   getStudentById: vi.fn(),
   getAllStudents: vi.fn(),
@@ -43,13 +42,11 @@ describe("student.register", () => {
   });
 
   it("新規ユーザーを登録できる", async () => {
-    vi.mocked(db.getStudentByUsername).mockResolvedValue(undefined);
     vi.mocked(db.getStudentByLoginId)
       .mockResolvedValueOnce(undefined) // 重複チェック
       .mockResolvedValueOnce({
         id: 1,
-        username: "テストユーザー",
-        loginId: "test001",
+        loginId: "YamadaTaro",
         passwordHash: "hash",
         sheetRow: null,
         createdAt: new Date(),
@@ -60,20 +57,18 @@ describe("student.register", () => {
     const ctx = createCtx();
     const caller = appRouter.createCaller(ctx);
     const result = await caller.student.register({
-      username: "テストユーザー",
-      loginId: "test001",
+      loginId: "YamadaTaro",
       password: "password123",
     });
 
     expect(result.success).toBe(true);
-    expect(result.username).toBe("テストユーザー");
+    expect(result.loginId).toBe("YamadaTaro");
   });
 
-  it("ユーザー名が重複している場合はエラーになる", async () => {
-    vi.mocked(db.getStudentByUsername).mockResolvedValue({
+  it("IDが重複している場合はエラーになる", async () => {
+    vi.mocked(db.getStudentByLoginId).mockResolvedValue({
       id: 1,
-      username: "既存ユーザー",
-      loginId: "existing",
+      loginId: "ExistingUser",
       passwordHash: "hash",
       sheetRow: null,
       createdAt: new Date(),
@@ -83,11 +78,10 @@ describe("student.register", () => {
     const caller = appRouter.createCaller(ctx);
     await expect(
       caller.student.register({
-        username: "既存ユーザー",
-        loginId: "newid",
+        loginId: "ExistingUser",
         password: "password123",
       })
-    ).rejects.toThrow("このユーザー名はすでに使用されています");
+    ).rejects.toThrow("このIDはすでに使用されています");
   });
 });
 
@@ -100,8 +94,7 @@ describe("student.login", () => {
     const hash = await bcrypt.hash("correctpass", 12);
     vi.mocked(db.getStudentByLoginId).mockResolvedValue({
       id: 1,
-      username: "ログインユーザー",
-      loginId: "logintest",
+      loginId: "InamuraJIN",
       passwordHash: hash,
       sheetRow: null,
       createdAt: new Date(),
@@ -110,20 +103,19 @@ describe("student.login", () => {
     const ctx = createCtx();
     const caller = appRouter.createCaller(ctx);
     const result = await caller.student.login({
-      loginId: "logintest",
+      loginId: "InamuraJIN",
       password: "correctpass",
     });
 
     expect(result.success).toBe(true);
-    expect(result.username).toBe("ログインユーザー");
+    expect(result.loginId).toBe("InamuraJIN");
   });
 
   it("パスワードが間違っている場合はエラーになる", async () => {
     const hash = await bcrypt.hash("correctpass", 12);
     vi.mocked(db.getStudentByLoginId).mockResolvedValue({
       id: 1,
-      username: "ユーザー",
-      loginId: "logintest",
+      loginId: "InamuraJIN",
       passwordHash: hash,
       sheetRow: null,
       createdAt: new Date(),
@@ -132,7 +124,7 @@ describe("student.login", () => {
     const ctx = createCtx();
     const caller = appRouter.createCaller(ctx);
     await expect(
-      caller.student.login({ loginId: "logintest", password: "wrongpass" })
+      caller.student.login({ loginId: "InamuraJIN", password: "wrongpass" })
     ).rejects.toThrow("IDまたはパスワードが正しくありません");
   });
 });
