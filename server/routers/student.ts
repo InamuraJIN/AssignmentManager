@@ -63,7 +63,7 @@ export const studentRouter = router({
       }
 
       const token = signStudentToken(student.id);
-      ctx.res.cookie(STUDENT_COOKIE, token, {
+      (ctx.res as any).cookie(STUDENT_COOKIE, token, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -94,7 +94,7 @@ export const studentRouter = router({
       }
 
       const token = signStudentToken(student.id);
-      ctx.res.cookie(STUDENT_COOKIE, token, {
+      (ctx.res as any).cookie(STUDENT_COOKIE, token, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -107,7 +107,7 @@ export const studentRouter = router({
 
   // ログアウト
   logout: publicProcedure.mutation(({ ctx }) => {
-    ctx.res.clearCookie(STUDENT_COOKIE, {
+    (ctx.res as any).clearCookie(STUDENT_COOKIE, {
       httpOnly: true,
       secure: true,
       sameSite: "none",

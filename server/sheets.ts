@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { JWT } from "google-auth-library";
+import { JWT, OAuth2Client } from "google-auth-library";
 
 function getSpreadsheetId(): string {
   const url = process.env.GOOGLE_SPREADSHEET_URL || "";
@@ -26,7 +26,8 @@ async function getAuthenticatedSheets() {
     key: credentials.private_key,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return google.sheets({ version: "v4", auth });
+  // JWT extends OAuth2Client, cast to satisfy googleapis-common type
+  return google.sheets({ version: "v4", auth: auth as unknown as OAuth2Client });
 }
 
 /**
@@ -36,10 +37,8 @@ async function getAuthenticatedSheets() {
 export async function appendUsernameToSheet(loginId: string): Promise<number> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) throw new Error("Spreadsheet ID is not configured");
-
   const sheetsClient = await getAuthenticatedSheets();
   const sheetName = getSheetName();
-
   const response = await sheetsClient.spreadsheets.values.append({
     spreadsheetId,
     range: `${sheetName}!A:A`,
@@ -49,7 +48,6 @@ export async function appendUsernameToSheet(loginId: string): Promise<number> {
       values: [[loginId]],
     },
   });
-
   const updatedRange = response.data.updates?.updatedRange || "";
   const rowMatch = updatedRange.match(/(\d+)$/);
   const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : 0;
@@ -63,16 +61,13 @@ export async function appendUsernameToSheet(loginId: string): Promise<number> {
 export async function fetchSheetData(): Promise<{ username: string; scores: string[] }[]> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) return [];
-
   try {
     const sheetsClient = await getAuthenticatedSheets();
     const sheetName = getSheetName();
-
     const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId,
       range: `${sheetName}!A:Z`,
     });
-
     const rows: string[][] = (response.data.values || []) as string[][];
     return rows
       .filter((row) => row[0] && String(row[0]).trim() !== "")

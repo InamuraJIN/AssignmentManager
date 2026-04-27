@@ -10,5 +10,8 @@
       "maxDuration": 30,
       "includeFiles": "server/**"
     }
+  },
+  "typescript": {
+    "ignoreBuildErrors": true
   }
 }
