@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { sheets as sheetsApi } from "@googleapis/sheets";
 import { JWT } from "google-auth-library";
 
 function getSpreadsheetId(): string {
@@ -26,7 +26,7 @@ async function getAuthenticatedSheets() {
     key: credentials.private_key,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return google.sheets({ version: "v4", auth: auth as any });
+  return sheetsApi({ version: "v4", auth: auth as any });
 }
 
 export async function appendUsernameToSheet(loginId: string): Promise<number> {

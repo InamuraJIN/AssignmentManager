@@ -1,14 +1,13 @@
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm build && node build-api.mjs",
   "outputDirectory": "dist/public",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/:path*", "destination": "/index.html" }
   ],
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 30,
-      "includeFiles": "**"
+    "api/index.js": {
+      "maxDuration": 30
     }
   }
 }
