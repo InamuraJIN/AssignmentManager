@@ -118,7 +118,7 @@ export const studentRouter = router({
 
   // 現在のログイン生徒情報
   me: publicProcedure.query(async ({ ctx }) => {
-    const token = ctx.req.cookies?.[STUDENT_COOKIE];
+    const token = (ctx.req as any).cookies?.[STUDENT_COOKIE];
     if (!token) return null;
     const payload = verifyStudentToken(token);
     if (!payload) return null;
@@ -145,7 +145,7 @@ export const studentRouter = router({
 
   // 自分の採点結果のみ
   myScore: publicProcedure.query(async ({ ctx }) => {
-    const token = ctx.req.cookies?.[STUDENT_COOKIE];
+    const token = (ctx.req as any).cookies?.[STUDENT_COOKIE];
     if (!token) throw new TRPCError({ code: "UNAUTHORIZED" });
     const payload = verifyStudentToken(token);
     if (!payload) throw new TRPCError({ code: "UNAUTHORIZED" });

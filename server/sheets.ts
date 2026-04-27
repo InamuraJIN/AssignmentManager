@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { JWT, OAuth2Client } from "google-auth-library";
+import { JWT } from "google-auth-library";
 
 function getSpreadsheetId(): string {
   const url = process.env.GOOGLE_SPREADSHEET_URL || "";
@@ -26,14 +26,9 @@ async function getAuthenticatedSheets() {
     key: credentials.private_key,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  // JWT extends OAuth2Client, cast to satisfy googleapis-common type
-  return google.sheets({ version: "v4", auth: auth as unknown as OAuth2Client });
+  return google.sheets({ version: "v4", auth: auth as any });
 }
 
-/**
- * スプレッドシートにログインIDを新しい行として追記する
- * 戻り値: 追記された行番号（1始まり）
- */
 export async function appendUsernameToSheet(loginId: string): Promise<number> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) throw new Error("Spreadsheet ID is not configured");
@@ -54,10 +49,6 @@ export async function appendUsernameToSheet(loginId: string): Promise<number> {
   return rowNumber;
 }
 
-/**
- * スプレッドシートから全データを取得する
- * 想定フォーマット: A列=ログインID, B列以降=採点結果
- */
 export async function fetchSheetData(): Promise<{ username: string; scores: string[] }[]> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) return [];
@@ -81,9 +72,6 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
   }
 }
 
-/**
- * 特定ログインIDの採点結果をスプレッドシートから取得する
- */
 export async function fetchScoreByUsername(loginId: string): Promise<string[] | null> {
   const data = await fetchSheetData();
   const found = data.find((row) => row.username === loginId);
