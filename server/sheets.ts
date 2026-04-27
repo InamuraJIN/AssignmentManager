@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { GoogleAuth } from "google-auth-library";
+import { JWT } from "google-auth-library";
 
 function getSpreadsheetId(): string {
   const url = process.env.GOOGLE_SPREADSHEET_URL || "";
@@ -12,17 +12,21 @@ function getSheetName(): string {
   return process.env.GOOGLE_SHEET_NAME || "Sheet1";
 }
 
-async function getAuthClient(): Promise<GoogleAuth> {
+async function getAuthenticatedSheets() {
   const credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!credentialsJson) {
     throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not set");
   }
-  const credentials = JSON.parse(credentialsJson);
-  const auth = new GoogleAuth({
-    credentials,
+  const credentials = JSON.parse(credentialsJson) as {
+    client_email: string;
+    private_key: string;
+  };
+  const auth = new JWT({
+    email: credentials.client_email,
+    key: credentials.private_key,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return auth;
+  return google.sheets({ version: "v4", auth });
 }
 
 /**
@@ -33,9 +37,7 @@ export async function appendUsernameToSheet(loginId: string): Promise<number> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) throw new Error("Spreadsheet ID is not configured");
 
-  const auth = await getAuthClient();
-  const authClient = await auth.getClient();
-  const sheetsClient = google.sheets({ version: "v4", auth: authClient as Parameters<typeof google.sheets>[0]["auth"] });
+  const sheetsClient = await getAuthenticatedSheets();
   const sheetName = getSheetName();
 
   const response = await sheetsClient.spreadsheets.values.append({
@@ -63,9 +65,7 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
   if (!spreadsheetId) return [];
 
   try {
-    const auth = await getAuthClient();
-    const authClient = await auth.getClient();
-    const sheetsClient = google.sheets({ version: "v4", auth: authClient as Parameters<typeof google.sheets>[0]["auth"] });
+    const sheetsClient = await getAuthenticatedSheets();
     const sheetName = getSheetName();
 
     const response = await sheetsClient.spreadsheets.values.get({
@@ -75,10 +75,10 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
 
     const rows: string[][] = (response.data.values || []) as string[][];
     return rows
-      .filter((row: string[]) => row[0] && String(row[0]).trim() !== "")
-      .map((row: string[]) => ({
+      .filter((row) => row[0] && String(row[0]).trim() !== "")
+      .map((row) => ({
         username: String(row[0]).trim(),
-        scores: row.slice(1).map((v: string) => String(v ?? "")),
+        scores: row.slice(1).map((v) => String(v ?? "")),
       }));
   } catch (error) {
     console.error("[Sheets] Failed to fetch data:", error);

@@ -28,10 +28,10 @@ export default function Home() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3" style={{ color: "oklch(0.18 0.025 255)" }}>
-            Student Portal
+            採点結果確認システムv2
           </h1>
           <p className="text-base text-muted-foreground mb-12">
-            採点結果確認システム
+            Student Portal
           </p>
 
           {/* メインボタン */}
@@ -95,7 +95,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-6">
         <div className="container text-center text-sm text-muted-foreground">
-          © 2026 Student Portal. All rights reserved.
+          © 2026 採点結果確認システムv2. All rights reserved.
         </div>
       </footer>
     </div>
