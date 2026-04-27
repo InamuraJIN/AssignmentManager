@@ -4,7 +4,7 @@ import { mkdirSync } from "fs";
 mkdirSync("api", { recursive: true });
 
 await build({
-  entryPoints: ["api/index.ts"],
+  entryPoints: ["api/handler.ts"],
   bundle: true,
   platform: "node",
   target: "node20",

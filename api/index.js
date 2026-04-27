@@ -53804,7 +53804,7 @@ var require_dist5 = __commonJS({
   );
 })();
 
-// api/index.ts
+// api/handler.ts
 var import_express = __toESM(require_express2(), 1);
 var import_cookie_parser = __toESM(require_cookie_parser(), 1);
 
@@ -83338,7 +83338,7 @@ async function createContext(opts) {
   };
 }
 
-// api/index.ts
+// api/handler.ts
 var app = (0, import_express.default)();
 app.use(import_express.default.json({ limit: "10mb" }));
 app.use(import_express.default.urlencoded({ extended: true }));
