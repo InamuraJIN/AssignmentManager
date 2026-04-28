@@ -64,7 +64,7 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
     const sheetName = getSheetName();
     const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A:AH`,
+      range: `${sheetName}!A:AZ`,
     });
     const rows: string[][] = (response.data.values || []) as string[][];
     if (rows.length === 0) return [];
@@ -91,7 +91,7 @@ export async function fetchScoreByUsername(loginId: string): Promise<{ scores: s
     const sheetName = getSheetName();
     const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A:AH`,
+      range: `${sheetName}!A:AZ`,
     });
     const rows: string[][] = (response.data.values || []) as string[][];
     if (rows.length === 0) return null;
