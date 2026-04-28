@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { BookOpen, User, Award, LogOut, ArrowLeft, RefreshCw, ShieldCheck, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { BookOpen, Award, LogOut, ArrowLeft, RefreshCw, ShieldCheck, CheckCircle, XCircle } from "lucide-react";
 
 export default function MyPage() {
   const [, navigate] = useLocation();
@@ -11,7 +11,7 @@ export default function MyPage() {
   const { data: me, isLoading: meLoading } = trpc.student.me.useQuery();
   const { data: myScore, isLoading: scoreLoading, refetch, isFetching } = trpc.student.myScore.useQuery(
     undefined,
-    { enabled: !!me, retry: false }
+    { enabled: !!me, retry: false, refetchOnWindowFocus: false, refetchOnMount: false, refetchInterval: false }
   );
 
   const logoutMutation = trpc.student.logout.useMutation({
@@ -24,7 +24,6 @@ export default function MyPage() {
 
   const scoreData = (myScore as any)?.scoreData;
   const total = scoreData?.total ?? null;
-  const totalMax = scoreData?.totalMax ?? null;
   const videoSubmitted = scoreData?.videoSubmitted ?? null;
   const hasScore = scoreData?.hasScore ?? false;
 
@@ -83,18 +82,16 @@ export default function MyPage() {
             </div>
             <span className="font-semibold text-foreground tracking-wide">Student Portal</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-white/80"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-            >
-              <LogOut className="w-4 h-4" />
-              ログアウト
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 bg-white/80"
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+          >
+            <LogOut className="w-4 h-4" />
+            ログアウト
+          </Button>
         </div>
       </header>
 
@@ -107,23 +104,10 @@ export default function MyPage() {
         </Link>
 
         {/* Profile Card */}
-        <div className="rounded-2xl shadow-xl border border-border/40 mb-6 bg-white/90">
-          <div className="h-24 relative rounded-t-2xl" style={{ background: "linear-gradient(135deg, oklch(0.20 0.045 255), oklch(0.35 0.1 255))" }}>
-            <div className="absolute inset-0 opacity-20 rounded-t-2xl" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }}></div>
-            <div className="absolute bottom-0 left-8 translate-y-1/2">
-              <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold" style={{ background: "linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.45 0.14 255))" }}>
-                {me.loginId.charAt(0).toUpperCase()}
-              </div>
-            </div>
-          </div>
-          <div className="px-8 pb-8 pt-12">
-            <div className="mb-3">
-              <h2 className="text-2xl font-bold text-foreground truncate">{me.loginId}</h2>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full w-fit text-xs font-medium" style={{ background: "oklch(0.93 0.04 255 / 0.5)", color: "oklch(0.32 0.08 255)" }}>
-              <User className="w-3.5 h-3.5" />
-              受講生
-            </div>
+        <div className="rounded-2xl shadow-xl border border-border/40 mb-6 overflow-hidden">
+          <div className="px-8 py-6 flex items-center" style={{ background: "linear-gradient(135deg, oklch(0.20 0.045 255), oklch(0.35 0.1 255))" }}>
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }}></div>
+            <h2 className="text-2xl font-bold text-white truncate">{me.loginId}</h2>
           </div>
         </div>
 
@@ -134,10 +118,7 @@ export default function MyPage() {
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, oklch(0.65 0.15 75), oklch(0.75 0.12 80))" }}>
                 <Award className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground">採点結果</h3>
-                <p className="text-xs text-muted-foreground">講師による採点結果</p>
-              </div>
+              <h3 className="font-semibold text-foreground">採点結果</h3>
             </div>
             <Button
               variant="outline"
@@ -159,12 +140,12 @@ export default function MyPage() {
               </div>
             ) : hasScore ? (
               <div className="space-y-4">
-                {/* 合計点 */}
                 {total !== null && (
                   <div className="rounded-xl border border-border/40 p-5 text-center" style={{ background: "oklch(0.97 0.008 255)" }}>
                     <p className="text-sm text-muted-foreground mb-1">合計点</p>
-                    <p className="text-4xl font-bold mb-1" style={{ color: "oklch(0.32 0.08 255)" }}>
-                      {total}{totalMax !== null ? <span className="text-xl font-medium text-muted-foreground">/{totalMax}点</span> : <span className="text-xl font-medium text-muted-foreground">点</span>}
+                    <p className="text-4xl font-bold" style={{ color: "oklch(0.32 0.08 255)" }}>
+                      {total}
+                      <span className="text-base font-medium text-muted-foreground ml-1">/100</span>
                     </p>
                     {(() => {
                       const msg = getScoreMessage(total);
@@ -177,7 +158,6 @@ export default function MyPage() {
                   </div>
                 )}
 
-                {/* 動画提出状況 */}
                 {videoSubmitted !== null && (
                   <div className="flex items-center gap-3 p-4 rounded-xl border border-border/40" style={{ background: "oklch(0.97 0.008 255)" }}>
                     {videoSubmitted ? (
