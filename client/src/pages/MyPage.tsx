@@ -2,14 +2,14 @@ import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { BookOpen, Award, LogOut, ArrowLeft, RefreshCw, ShieldCheck, CheckCircle, XCircle } from "lucide-react";
+import { BookOpen, Award, LogOut, ArrowLeft, ShieldCheck, CheckCircle, XCircle } from "lucide-react";
 
 export default function MyPage() {
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
 
   const { data: me, isLoading: meLoading } = trpc.student.me.useQuery();
-  const { data: myScore, isLoading: scoreLoading, refetch, isFetching } = trpc.student.myScore.useQuery(
+  const { data: myScore, isLoading: scoreLoading } = trpc.student.myScore.useQuery(
     undefined,
     { enabled: !!me, retry: false, refetchOnWindowFocus: false, refetchOnMount: false, refetchInterval: false }
   );
@@ -113,23 +113,11 @@ export default function MyPage() {
 
         {/* Score Card */}
         <div className="bg-white/90 rounded-2xl shadow-lg border border-border/40 overflow-hidden">
-          <div className="px-6 py-5 border-b border-border/40 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, oklch(0.65 0.15 75), oklch(0.75 0.12 80))" }}>
-                <Award className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="font-semibold text-foreground">採点結果</h3>
+          <div className="px-6 py-5 border-b border-border/40 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, oklch(0.65 0.15 75), oklch(0.75 0.12 80))" }}>
+              <Award className="w-4 h-4 text-white" />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="gap-2 bg-white/80"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
-              更新
-            </Button>
+            <h3 className="font-semibold text-foreground">採点結果</h3>
           </div>
 
           <div className="p-6">

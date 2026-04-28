@@ -98,9 +98,9 @@ export async function fetchScoreByUsername(loginId: string): Promise<{ scores: s
 
     const headerRow = rows[0].map((h) => String(h ?? "").trim());
 
-    const totalColIndex = headerRow.findIndex((h) => h === "合計点");
-    const videoColIndex = headerRow.findIndex((h) => h === "動画提出");
-    const totalMaxColIndex = headerRow.findIndex((h) => h === "満点");
+    const totalColIndex = headerRow.findIndex((h) => h === "TotalScore");
+    const videoColIndex = headerRow.findIndex((h) => h === "VideoSubmission");
+    const totalMaxColIndex = headerRow.findIndex((h) => h === "MaxScore");
 
     const dataRows = rows.slice(1);
     const found = dataRows.find((row) => String(row[0] ?? "").trim() === loginId);
