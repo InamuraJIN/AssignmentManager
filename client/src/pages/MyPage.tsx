@@ -111,12 +111,14 @@ export default function MyPage() {
           <div className="h-24 relative" style={{ background: "linear-gradient(135deg, oklch(0.20 0.045 255), oklch(0.35 0.1 255))" }}>
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }}></div>
           </div>
-          <div className="px-8 pb-8 pt-0">
-            <div className="-mt-8 mb-4">
-              <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 mb-3" style={{ background: "linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.45 0.14 255))" }}>
+          <div className="px-8 pb-8 pt-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 -mt-12" style={{ background: "linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.45 0.14 255))" }}>
                 {me.loginId.charAt(0).toUpperCase()}
               </div>
-              <h2 className="text-2xl font-bold text-foreground">{me.loginId}</h2>
+              <div className="min-w-0">
+                <h2 className="text-2xl font-bold text-foreground truncate">{me.loginId}</h2>
+              </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full w-fit text-xs font-medium" style={{ background: "oklch(0.93 0.04 255 / 0.5)", color: "oklch(0.32 0.08 255)" }}>
               <User className="w-3.5 h-3.5" />
