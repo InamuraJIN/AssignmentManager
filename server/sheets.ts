@@ -49,6 +49,13 @@ export async function appendUsernameToSheet(loginId: string): Promise<number> {
   return rowNumber;
 }
 
+export type ScoreData = {
+  total: number | null;
+  totalMax: number | null;
+  videoSubmitted: boolean | null;
+  hasScore: boolean;
+};
+
 export async function fetchSheetData(): Promise<{ username: string; scores: string[] }[]> {
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) return [];
@@ -57,10 +64,14 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
     const sheetName = getSheetName();
     const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A:Z`,
+      range: `${sheetName}!A:AH`,
     });
     const rows: string[][] = (response.data.values || []) as string[][];
-    return rows
+    if (rows.length === 0) return [];
+
+    const dataRows = rows.slice(1);
+
+    return dataRows
       .filter((row) => row[0] && String(row[0]).trim() !== "")
       .map((row) => ({
         username: String(row[0]).trim(),
@@ -72,8 +83,66 @@ export async function fetchSheetData(): Promise<{ username: string; scores: stri
   }
 }
 
-export async function fetchScoreByUsername(loginId: string): Promise<string[] | null> {
-  const data = await fetchSheetData();
-  const found = data.find((row) => row.username === loginId);
-  return found ? found.scores : null;
+export async function fetchScoreByUsername(loginId: string): Promise<{ scores: string[]; scoreData: ScoreData } | null> {
+  const spreadsheetId = getSpreadsheetId();
+  if (!spreadsheetId) return null;
+  try {
+    const sheetsClient = await getAuthenticatedSheets();
+    const sheetName = getSheetName();
+    const response = await sheetsClient.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!A:AH`,
+    });
+    const rows: string[][] = (response.data.values || []) as string[][];
+    if (rows.length === 0) return null;
+
+    const headerRow = rows[0].map((h) => String(h ?? "").trim());
+
+    const totalColIndex = headerRow.findIndex((h) => h === "合計点");
+    const videoColIndex = headerRow.findIndex((h) => h === "動画提出");
+    const totalMaxColIndex = headerRow.findIndex((h) => h === "満点");
+
+    const dataRows = rows.slice(1);
+    const found = dataRows.find((row) => String(row[0] ?? "").trim() === loginId);
+    if (!found) return null;
+
+    const scores = found.slice(1).map((v) => String(v ?? ""));
+
+    let total: number | null = null;
+    let totalMax: number | null = null;
+    let videoSubmitted: boolean | null = null;
+
+    if (totalColIndex >= 1) {
+      const val = found[totalColIndex];
+      if (val !== undefined && val !== "") {
+        total = parseFloat(String(val));
+        if (isNaN(total)) total = null;
+      }
+    }
+
+    if (totalMaxColIndex >= 1) {
+      const val = found[totalMaxColIndex];
+      if (val !== undefined && val !== "") {
+        totalMax = parseFloat(String(val));
+        if (isNaN(totalMax)) totalMax = null;
+      }
+    }
+
+    if (videoColIndex >= 1) {
+      const val = found[videoColIndex];
+      if (val !== undefined && val !== "") {
+        videoSubmitted = String(val).trim() === "1";
+      }
+    }
+
+    const hasScore = total !== null;
+
+    return {
+      scores,
+      scoreData: { total, totalMax, videoSubmitted, hasScore },
+    };
+  } catch (error) {
+    console.error("[Sheets] Failed to fetch score:", error);
+    return null;
+  }
 }

@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { BookOpen, User, Award, LogOut, ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
+import { BookOpen, User, Award, LogOut, ArrowLeft, RefreshCw, ShieldCheck, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 export default function MyPage() {
   const [, navigate] = useLocation();
@@ -21,6 +21,22 @@ export default function MyPage() {
       navigate("/");
     },
   });
+
+  const scoreData = (myScore as any)?.scoreData;
+  const total = scoreData?.total ?? null;
+  const totalMax = scoreData?.totalMax ?? null;
+  const videoSubmitted = scoreData?.videoSubmitted ?? null;
+  const hasScore = scoreData?.hasScore ?? false;
+
+  function getScoreMessage(score: number): { text: string; color: string } {
+    if (score <= 40) {
+      return { text: "再提出してください", color: "oklch(0.55 0.18 25)" };
+    } else if (score <= 79) {
+      return { text: "合格です！これからも頑張ってください！", color: "oklch(0.50 0.15 145)" };
+    } else {
+      return { text: "大変よくできました！", color: "oklch(0.45 0.18 255)" };
+    }
+  }
 
   if (meLoading) {
     return (
@@ -59,7 +75,6 @@ export default function MyPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(135deg, oklch(0.96 0.012 255) 0%, oklch(0.98 0.005 80) 50%, oklch(0.95 0.018 290) 100%)" }}>
-      {/* Header */}
       <header className="border-b border-border/50 bg-white/70 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
@@ -83,7 +98,7 @@ export default function MyPage() {
         </div>
       </header>
 
-      <div className="container max-w-3xl mx-auto py-10">
+      <div className="container max-w-3xl mx-auto py-10 px-4">
         <Link href="/">
           <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
             <ArrowLeft className="w-4 h-4" />
@@ -92,17 +107,17 @@ export default function MyPage() {
         </Link>
 
         {/* Profile Card */}
-        <div className="rounded-2xl overflow-hidden shadow-xl border border-border/40 mb-6">
+        <div className="rounded-2xl overflow-hidden shadow-xl border border-border/40 mb-6 bg-white/90">
           <div className="h-24 relative" style={{ background: "linear-gradient(135deg, oklch(0.20 0.045 255), oklch(0.35 0.1 255))" }}>
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }}></div>
           </div>
-          <div className="bg-white/90 px-8 pb-8">
-            <div className="flex items-end gap-4 -mt-8 mb-6">
-              <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold" style={{ background: "linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.45 0.14 255))" }}>
+          <div className="px-8 pb-8 pt-0">
+            <div className="flex items-end gap-4 -mt-8 mb-4">
+              <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style={{ background: "linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.45 0.14 255))" }}>
                 {me.loginId.charAt(0).toUpperCase()}
               </div>
-              <div className="pb-1">
-                <h2 className="text-2xl font-bold text-foreground">{me.loginId}</h2>
+              <div className="pb-1 min-w-0">
+                <h2 className="text-2xl font-bold text-foreground truncate">{me.loginId}</h2>
               </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full w-fit text-xs font-medium" style={{ background: "oklch(0.93 0.04 255 / 0.5)", color: "oklch(0.32 0.08 255)" }}>
@@ -142,22 +157,48 @@ export default function MyPage() {
                 <div className="inline-block w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mb-3"></div>
                 <p className="text-sm text-muted-foreground">採点結果を読み込み中...</p>
               </div>
-            ) : myScore && myScore.scores.length > 0 ? (
-              <div className="space-y-3">
-                {myScore.scores.map((score, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-4 rounded-xl border border-border/40"
-                    style={{ background: "oklch(0.97 0.008 255)" }}
-                  >
-                    <span className="text-sm font-medium text-muted-foreground">
-                      項目 {i + 1}
-                    </span>
-                    <span className="text-lg font-bold" style={{ color: "oklch(0.32 0.08 255)" }}>
-                      {score}
-                    </span>
+            ) : hasScore ? (
+              <div className="space-y-4">
+                {/* 合計点 */}
+                {total !== null && (
+                  <div className="rounded-xl border border-border/40 p-5 text-center" style={{ background: "oklch(0.97 0.008 255)" }}>
+                    <p className="text-sm text-muted-foreground mb-1">合計点</p>
+                    <p className="text-4xl font-bold mb-1" style={{ color: "oklch(0.32 0.08 255)" }}>
+                      {total}{totalMax !== null ? <span className="text-xl font-medium text-muted-foreground">/{totalMax}点</span> : <span className="text-xl font-medium text-muted-foreground">点</span>}
+                    </p>
+                    {(() => {
+                      const msg = getScoreMessage(total);
+                      return (
+                        <p className="text-sm font-medium mt-2" style={{ color: msg.color }}>
+                          {msg.text}
+                        </p>
+                      );
+                    })()}
                   </div>
-                ))}
+                )}
+
+                {/* 動画提出状況 */}
+                {videoSubmitted !== null && (
+                  <div className="flex items-center gap-3 p-4 rounded-xl border border-border/40" style={{ background: "oklch(0.97 0.008 255)" }}>
+                    {videoSubmitted ? (
+                      <>
+                        <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: "oklch(0.50 0.15 145)" }} />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">動画提出</p>
+                          <p className="text-sm" style={{ color: "oklch(0.50 0.15 145)" }}>提出済み</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-5 h-5 flex-shrink-0" style={{ color: "oklch(0.55 0.18 25)" }} />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">動画提出</p>
+                          <p className="text-sm" style={{ color: "oklch(0.55 0.18 25)" }}>提出が確認できません。</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="py-12 text-center">

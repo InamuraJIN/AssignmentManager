@@ -9,7 +9,7 @@ import {
   getStudentById,
   updateStudentSheetRow,
 } from "../db";
-import { appendUsernameToSheet, fetchScoreByUsername, fetchSheetData } from "../sheets";
+import { appendUsernameToSheet, fetchSheetData, fetchScoreByUsername } from "../sheets";
 import { publicProcedure, router } from "../_core/trpc";
 
 const JWT_SECRET = process.env.JWT_SECRET || "student-secret-key";
@@ -29,7 +29,6 @@ function verifyStudentToken(token: string): { studentId: number } | null {
 const STUDENT_COOKIE = "student_session";
 
 export const studentRouter = router({
-  // 生徒登録（loginIdのみ）
   register: publicProcedure
     .input(
       z.object({
@@ -52,7 +51,6 @@ export const studentRouter = router({
       const student = await getStudentByLoginId(input.loginId);
       if (!student) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      // スプレッドシートにloginIdを追記（エラーでも登録は成功扱い）
       try {
         const rowNumber = await appendUsernameToSheet(input.loginId);
         if (rowNumber > 0) {
@@ -74,7 +72,6 @@ export const studentRouter = router({
       return { success: true, loginId: student.loginId };
     }),
 
-  // ログイン
   login: publicProcedure
     .input(
       z.object({
@@ -105,7 +102,6 @@ export const studentRouter = router({
       return { success: true, loginId: student.loginId };
     }),
 
-  // ログアウト
   logout: publicProcedure.mutation(({ ctx }) => {
     (ctx.res as any).clearCookie(STUDENT_COOKIE, {
       httpOnly: true,
@@ -116,7 +112,6 @@ export const studentRouter = router({
     return { success: true };
   }),
 
-  // 現在のログイン生徒情報
   me: publicProcedure.query(async ({ ctx }) => {
     const token = (ctx.req as any).cookies?.[STUDENT_COOKIE];
     if (!token) return null;
@@ -127,7 +122,6 @@ export const studentRouter = router({
     return { id: student.id, loginId: student.loginId };
   }),
 
-  // 全ID一覧（採点結果付き）
   list: publicProcedure.query(async () => {
     const allStudents = await getAllStudents();
     const sheetData = await fetchSheetData().catch(() => []);
@@ -143,7 +137,6 @@ export const studentRouter = router({
     });
   }),
 
-  // 自分の採点結果のみ
   myScore: publicProcedure.query(async ({ ctx }) => {
     const token = (ctx.req as any).cookies?.[STUDENT_COOKIE];
     if (!token) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -152,10 +145,11 @@ export const studentRouter = router({
     const student = await getStudentById(payload.studentId);
     if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const scores = await fetchScoreByUsername(student.loginId).catch(() => null);
+    const result = await fetchScoreByUsername(student.loginId).catch(() => null);
     return {
       loginId: student.loginId,
-      scores: scores ?? [],
+      scores: result?.scores ?? [],
+      scoreData: result?.scoreData ?? { total: null, totalMax: null, videoSubmitted: null, hasScore: false },
     };
   }),
 });
