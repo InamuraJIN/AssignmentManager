@@ -97,7 +97,7 @@ export default function Register() {
                 <Label htmlFor="loginId" className="text-sm font-medium">ID <span className="text-destructive">*</span></Label>
                 <Input
                   id="loginId"
-                  placeholder="例：YamadaTaro"
+                  placeholder="例：01_YamadaTaro"
                   {...register("loginId")}
                   className="h-11 bg-white border-input focus:border-primary"
                 />
