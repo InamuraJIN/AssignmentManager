@@ -28,9 +28,9 @@ export default function MyPage() {
   const hasScore = scoreData?.hasScore ?? false;
 
   function getScoreMessage(score: number): { text: string; color: string } {
-    if (score <= 40) {
+    if (score <= 60) {
       return { text: "再提出してください", color: "oklch(0.55 0.18 25)" };
-    } else if (score <= 79) {
+    } else if (score <= 80) {
       return { text: "合格です！これからも頑張ってください！", color: "oklch(0.50 0.15 145)" };
     } else {
       return { text: "大変よくできました！", color: "oklch(0.45 0.18 255)" };
